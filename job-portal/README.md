@@ -1,4 +1,4 @@
-# 💼 Job Portal System
+﻿# 💼 Job Portal System
 
 A full-stack job portal application that connects employers with job seekers. Built with React, Node.js, Express, and MongoDB.
 
@@ -11,6 +11,7 @@ A full-stack job portal application that connects employers with job seekers. Bu
 ## 📋 Table of Contents
 
 - [Features](#-features)
+- [Modules](#-modules)
 - [Tech Stack](#-tech-stack)
 - [Prerequisites](#-prerequisites)
 - [Installation](#-installation)
@@ -18,7 +19,6 @@ A full-stack job portal application that connects employers with job seekers. Bu
 - [Running the Application](#-running-the-application)
 - [Project Structure](#-project-structure)
 - [API Endpoints](#-api-endpoints)
-- [Screenshots](#-screenshots)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -49,6 +49,44 @@ A full-stack job portal application that connects employers with job seekers. Bu
 - 🎨 Modern UI with Tailwind CSS
 - 🔒 Role-based access control
 - 📧 Email verification system
+
+## 📦 Modules
+
+### 1. Employer Module
+The Employer Module provides comprehensive tools for businesses to manage their recruitment process:
+- **Company Profile Management**: Create and customize company profiles with logo, description, industry, and website
+- **Job Posting**: Create detailed job listings with title, description, requirements, salary range, and job type
+- **Job Management**: Edit, update status, or delete job postings
+- **Dashboard Analytics**: View statistics on posted jobs, total applications, and hiring metrics
+- **Applicant Overview**: Quick access to view all applicants across all job postings
+
+### 2. Candidate Module
+The Candidate Module empowers job seekers with tools to find and apply for their ideal positions:
+- **Profile Management**: Build a professional profile with personal information, skills, education, and experience
+- **Job Search**: Advanced search with filters for location, salary, job type, and category
+- **Job Recommendations**: AI-powered job suggestions based on skills and preferences
+- **Saved Jobs**: Bookmark interesting jobs to apply later
+- **Application Tracking**: Monitor the status of all submitted applications in one place
+- **Dashboard**: Personalized dashboard showing application statistics and recommended jobs
+
+### 3. Resume Upload Module
+The Resume Upload Module handles all document management for candidates:
+- **Resume Upload**: Support for PDF, DOC, and DOCX formats
+- **File Size Validation**: Maximum 5MB file size limit
+- **Secure Storage**: Resumes stored securely on the server
+- **Profile Picture Upload**: Upload and manage profile photos
+- **Multiple Resume Versions**: Update resume anytime with new versions
+- **Resume Preview**: View uploaded resume directly in the application
+
+### 4. Application Review Module
+The Application Review Module streamlines the hiring workflow for employers:
+- **Applicant List View**: See all applicants for a specific job with their details
+- **Resume Access**: Download and view candidate resumes directly
+- **Cover Letter Review**: Read candidate cover letters submitted with applications
+- **Status Management**: Update application status (Pending → Reviewed → Shortlisted → Rejected/Hired)
+- **Candidate Profiles**: Access complete candidate profiles including skills, experience, and education
+- **Notification System**: Automatic notifications sent to candidates when application status changes
+- **Filtering & Sorting**: Filter applicants by status, sort by application date
 
 ## 🛠 Tech Stack
 
@@ -89,7 +127,7 @@ Before you begin, ensure you have the following installed:
 1. **Clone the repository**
    ```bash
    git clone https://github.com/aswin32156/job_board_system.git
-   cd job_board_system
+   cd job_board_system/job-portal
    ```
 
 2. **Install dependencies**
@@ -140,7 +178,6 @@ Before you begin, ensure you have the following installed:
 
 **Option 1: Run both servers together**
 ```bash
-cd job-portal
 npm run dev
 ```
 
@@ -158,8 +195,6 @@ npm run dev
 **Option 3: Use the batch file (Windows)**
 ```bash
 # Double-click start-servers.bat
-# Or run from command line
-start-servers.bat
 ```
 
 ### Access the Application
@@ -256,6 +291,7 @@ job-portal/
 | GET | `/api/candidate/dashboard` | Get dashboard data |
 | GET | `/api/candidate/profile` | Get profile |
 | PUT | `/api/candidate/profile` | Update profile |
+| POST | `/api/candidate/resume` | Upload resume |
 | POST | `/api/candidate/apply/:jobId` | Apply to job |
 | GET | `/api/candidate/applications` | Get applications |
 | POST | `/api/candidate/saved-jobs/:jobId` | Save job |
@@ -268,28 +304,8 @@ job-portal/
 | GET | `/api/employer/jobs` | Get employer's jobs |
 | GET | `/api/employer/jobs/:id/applications` | Get job applicants |
 | PUT | `/api/employer/applications/:id/status` | Update application status |
-
-## 📸 Screenshots
-
-### Home Page
-- Modern landing page with job search
-- Featured jobs and categories
-- Platform statistics
-
-### Job Search
-- Advanced filtering options
-- Job cards with key information
-- Pagination support
-
-### Candidate Dashboard
-- Application tracking
-- Job recommendations
-- Profile completion tips
-
-### Employer Dashboard
-- Job posting management
-- Applicant management
-- Analytics overview
+| PUT | `/api/employer/profile` | Update company profile |
+| POST | `/api/employer/logo` | Upload company logo |
 
 ## 🤝 Contributing
 
@@ -308,13 +324,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👨‍💻 Author
 
 **Aswin** - [GitHub](https://github.com/aswin32156)
-
-## 🙏 Acknowledgments
-
-- [React Documentation](https://react.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [MongoDB Documentation](https://www.mongodb.com/docs/)
-- [Express.js](https://expressjs.com/)
 
 ---
 
