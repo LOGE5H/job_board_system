@@ -15,9 +15,9 @@ const mode = () => (hasRealKey() ? 'gemini' : 'mock');
 router.get('/status', (req, res) => {
   res.json({
     mode: mode(),
-    provider: hasRealKey() ? 'google-gemini-2.0-flash' : 'local-heuristic',
+    provider: hasRealKey() ? 'google-gemini-3.5-flash-lite' : 'local-heuristic',
     message: hasRealKey()
-      ? 'AI is running with Gemini 2.0 Flash.'
+      ? 'AI is running with Gemini 3.5 Flash Lite.'
       : 'AI is in demo mode. Add GEMINI_API_KEY to .env for live inference.',
     features: [
       'analyze-resume', 'generate-job-description', 'cover-letter-help', 'resume-tips',
