@@ -8,7 +8,7 @@ function hasRealKey() {
 }
 
 // Get a Gemini model instance
-function getModel(modelName = 'gemini-3.5-flash-lite') {
+function getModel(modelName = 'gemini-3.8-flash') {
   if (!hasRealKey()) return null;
   const genAI = new GoogleGenerativeAI(API_KEY);
   return genAI.getGenerativeModel({ model: modelName });
