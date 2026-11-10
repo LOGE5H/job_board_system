@@ -62,10 +62,10 @@ export default function VerifyEmail() {
             </p>
             <div className="mt-6 space-x-4">
               <Link to="/register/candidate" className="btn-primary inline-block">
-                Register as Candidate
+                Register as Job Seeker
               </Link>
               <Link to="/register/employer" className="btn-outline inline-block">
-                Register as Employer
+                Register as Institution / Company
               </Link>
             </div>
           </div>

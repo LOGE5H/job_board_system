@@ -44,6 +44,15 @@ const jobSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  minExperienceYears: {
+    type: Number,
+    default: 0
+  },
+  minEducation: {
+    type: String,
+    enum: ['any', 'high_school', 'diploma', 'bachelor', 'master', 'phd'],
+    default: 'any'
+  },
   status: {
     type: String,
     enum: ['open', 'closed', 'hidden'],

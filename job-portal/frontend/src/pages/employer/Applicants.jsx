@@ -25,7 +25,9 @@ import {
   ExternalLink,
   X,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  Brain,
+  Zap
 } from 'lucide-react';
 
 const statusColors = {
@@ -156,16 +158,25 @@ export default function Applicants() {
         </Link>
         
         {job && (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center">
                 <Users className="h-8 w-8 mr-3 text-primary-600" />
                 Applicants for {job.title}
               </h1>
               <p className="text-gray-600 mt-1">
-                {applicants.length} applicant{applicants.length !== 1 ? 's' : ''} • Review profiles and make hiring decisions
+                {applicants.length} applicant{applicants.length !== 1 ? 's' : ''} · Review profiles and make hiring decisions
               </p>
             </div>
+            {/* AI Ranking button */}
+            <Link
+              to={`/employer/jobs/${jobId}/ai-ranking`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-md hover:shadow-indigo-200 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 text-sm"
+            >
+              <Brain className="h-4 w-4" />
+              AI Ranking
+              <Zap className="h-3.5 w-3.5" />
+            </Link>
           </div>
         )}
       </div>
@@ -286,7 +297,7 @@ export default function Applicants() {
                     </button>
                     {(applicant.resume_path || applicant.profile_resume) && (
                       <a
-                        href={`http://localhost:5000${applicant.resume_path || applicant.profile_resume}`}
+                        href={`${applicant.resume_path || applicant.profile_resume}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 btn-outline text-sm py-2 flex items-center justify-center"
@@ -431,7 +442,7 @@ export default function Applicants() {
                     <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
                       {candidateProfile.candidate.profile_picture ? (
                         <img
-                          src={`http://localhost:5000${candidateProfile.candidate.profile_picture}`}
+                          src={`${candidateProfile.candidate.profile_picture}`}
                           alt={candidateProfile.candidate.full_name}
                           className="w-20 h-20 rounded-full object-cover"
                         />
@@ -588,7 +599,7 @@ export default function Applicants() {
                 {candidateProfile.application.resume_path && (
                   <div className="mb-6">
                     <a
-                      href={`http://localhost:5000${candidateProfile.application.resume_path}`}
+                      href={`${candidateProfile.application.resume_path}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"

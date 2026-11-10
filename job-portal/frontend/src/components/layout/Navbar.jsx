@@ -114,16 +114,20 @@ export default function Navbar() {
 
             {isCandidate && (
               <>
-                <Link to="/jobs" className="px-4 py-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl font-medium flex items-center transition-all duration-200">
+                <Link to="/ai-studio" className="nav-link">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  AI Career Studio
+                </Link>
+                <Link to="/jobs" className="nav-link">
                   <Search className="h-4 w-4 mr-2" />
                   Search Jobs
                 </Link>
-                <Link to="/candidate/applications" className="text-gray-600 hover:text-green-600 font-medium flex items-center">
-                  <FileText className="h-4 w-4 mr-1" />
+                <Link to="/candidate/applications" className="nav-link">
+                  <FileText className="h-4 w-4 mr-2" />
                   My Applications
                 </Link>
-                <Link to="/candidate/saved-jobs" className="text-gray-600 hover:text-green-600 font-medium flex items-center">
-                  <Bookmark className="h-4 w-4 mr-1" />
+                <Link to="/candidate/saved-jobs" className="nav-link">
+                  <Bookmark className="h-4 w-4 mr-2" />
                   Saved Jobs
                 </Link>
               </>
@@ -131,12 +135,16 @@ export default function Navbar() {
 
             {isEmployer && (
               <>
-                <Link to="/employer/jobs/create" className="text-gray-600 hover:text-primary-600 font-medium flex items-center">
-                  <PlusCircle className="h-4 w-4 mr-1" />
+                <Link to="/ai-studio" className="nav-link">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  AI Hiring Studio
+                </Link>
+                <Link to="/employer/jobs/create" className="nav-link" title="Institutions / Companies post jobs here">
+                  <PlusCircle className="h-4 w-4 mr-2" />
                   Post a Job
                 </Link>
-                <Link to="/employer/jobs" className="text-gray-600 hover:text-primary-600 font-medium flex items-center">
-                  <Briefcase className="h-4 w-4 mr-1" />
+                <Link to="/employer/jobs" className="nav-link">
+                  <Briefcase className="h-4 w-4 mr-2" />
                   My Jobs
                 </Link>
               </>
@@ -145,11 +153,11 @@ export default function Navbar() {
             {!isAuthenticated ? (
               <>
                 <div className="flex items-center space-x-3">
-                  <Link to="/login/candidate" className="text-green-600 hover:text-green-700 font-medium">
-                    Candidate Login
+                  <Link to="/login/candidate" className="nav-link whitespace-nowrap" title="Find work — Job Seeker login">
+                    Job Seeker Login
                   </Link>
-                  <Link to="/login/employer" className="btn-primary text-sm">
-                    Employer Login
+                  <Link to="/login/employer" className="btn-primary text-sm whitespace-nowrap" title="Post jobs — Institution / Company login">
+                    Institution Login
                   </Link>
                 </div>
               </>
@@ -222,8 +230,11 @@ export default function Navbar() {
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           isEmployer ? 'bg-primary-100 text-primary-700' : 'bg-green-100 text-green-700'
                         }`}>
-                          {isEmployer ? 'Employer Account' : 'Candidate Account'}
+                          {isEmployer ? 'Institution Account' : 'Job Seeker Account'}
                         </span>
+                        <p className="mt-1 text-[11px] leading-tight text-gray-500">
+                          {isEmployer ? 'Can post jobs and review applicants' : 'Can search and apply to jobs'}
+                        </p>
                       </div>
 
                       <Link
@@ -233,6 +244,15 @@ export default function Navbar() {
                       >
                         <LayoutDashboard className="h-4 w-4 mr-3" />
                         Dashboard
+                      </Link>
+
+                      <Link
+                        to="/ai-studio"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <Sparkles className="h-4 w-4 mr-3" />
+                        AI Studio
                       </Link>
                       
                       {isEmployer && (
@@ -345,6 +365,13 @@ export default function Navbar() {
             {isCandidate && (
               <>
                 <Link
+                  to="/ai-studio"
+                  className="block text-primary-600 hover:text-primary-700 font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  AI Career Studio
+                </Link>
+                <Link
                   to="/jobs"
                   className="block text-gray-600 hover:text-green-600 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
@@ -378,6 +405,13 @@ export default function Navbar() {
             {isEmployer && (
               <>
                 <Link
+                  to="/ai-studio"
+                  className="block text-primary-600 hover:text-primary-700 font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  AI Hiring Studio
+                </Link>
+                <Link
                   to="/employer/jobs/create"
                   className="block text-gray-600 hover:text-primary-600 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
@@ -409,14 +443,14 @@ export default function Navbar() {
                   className="block text-green-600 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Candidate Login
+                  Job Seeker Login
                 </Link>
                 <Link
                   to="/login/employer"
                   className="block text-primary-600 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Employer Login
+                  Institution Login
                 </Link>
                 <hr className="my-2" />
                 <Link
@@ -424,14 +458,14 @@ export default function Navbar() {
                   className="block text-green-600 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Register as Candidate
+                  Register as Job Seeker
                 </Link>
                 <Link
                   to="/register/employer"
                   className="block text-primary-600 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Register as Employer
+                  Register as Institution / Company
                 </Link>
               </>
             ) : (

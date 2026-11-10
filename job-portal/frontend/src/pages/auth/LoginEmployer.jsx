@@ -20,7 +20,7 @@ export default function LoginEmployer() {
       const user = await login(email, password);
       
       if (user.role !== 'employer') {
-        toast.error('Please use the candidate login page');
+        toast.error('Please use the job seeker login page');
         navigate('/login/candidate');
         return;
       }
@@ -51,8 +51,7 @@ export default function LoginEmployer() {
       
       {/* Decorative Pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="a        cd d:\NOOO\job-portal
-        npm run devbsolute inset-0" style={{
+        <div className="absolute inset-0" style={{
           backgroundImage: 'radial-gradient(circle at 25px 25px, rgba(255,255,255,0.2) 2px, transparent 0)',
           backgroundSize: '50px 50px'
         }}></div>
@@ -65,12 +64,12 @@ export default function LoginEmployer() {
             <div className="mb-8">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm mb-6">
                 <Sparkles className="h-4 w-4 text-yellow-400" />
-                <span>Employer Portal</span>
+                <span>Institution Portal</span>
               </div>
               <h1 className="text-4xl font-bold mb-4">
                 Find Your Next
                 <span className="block mt-2 bg-gradient-to-r from-purple-300 via-pink-300 to-blue-300 bg-clip-text text-transparent">
-                  Star Employee
+                  Great Hire
                 </span>
               </h1>
               <p className="text-white/70 text-lg">
@@ -120,7 +119,7 @@ export default function LoginEmployer() {
                   <Building2 className="h-10 w-10 text-white" />
                 </div>
                 <h2 className="text-3xl font-bold text-white">Welcome Back</h2>
-                <p className="mt-2 text-white/60">Sign in to your employer account</p>
+                <p className="mt-2 text-white/60">Sign in to your institution account</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -190,7 +189,7 @@ export default function LoginEmployer() {
                 <p className="text-white/60">
                   Don't have an account?{' '}
                   <Link to="/register/employer" className="text-purple-400 hover:text-purple-300 font-semibold transition-colors">
-                    Register as Employer
+                    Register as Institution / Company
                   </Link>
                 </p>
               </div>
@@ -199,7 +198,7 @@ export default function LoginEmployer() {
                 <p className="text-sm text-white/50">
                   Looking for a job?{' '}
                   <Link to="/login/candidate" className="text-green-400 hover:text-green-300 font-semibold transition-colors">
-                    Login as Candidate
+                    Login as Job Seeker
                   </Link>
                 </p>
               </div>

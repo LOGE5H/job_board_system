@@ -49,12 +49,12 @@ export default function CandidateDashboard() {
       const apps = applicationsRes.data.applications || [];
       const savedJobs = savedRes.data.savedJobs || [];
       const statsData = {
-        totalApplications: applicationsRes.data.pagination?.total || apps.length,
+        totalApplications: applicationsRes.data.pagination?.totalApplications ?? apps.length,
         pending: apps.filter(a => a.status === 'pending').length,
         reviewed: apps.filter(a => a.status === 'reviewed').length,
         shortlisted: apps.filter(a => a.status === 'shortlisted').length,
         rejected: apps.filter(a => a.status === 'rejected').length,
-        savedJobs: savedRes.data.pagination?.totalSaved || savedJobs.length
+        savedJobs: savedRes.data.pagination?.totalSaved ?? savedJobs.length
       };
 
       setStats(statsData);
@@ -194,7 +194,7 @@ export default function CandidateDashboard() {
                         <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm">
                           {app.companyLogo ? (
                             <img
-                              src={`http://localhost:5000${app.companyLogo}`}
+                              src={app.companyLogo}
                               alt={app.companyName}
                               className="w-10 h-10 rounded object-cover"
                             />

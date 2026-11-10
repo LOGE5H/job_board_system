@@ -54,12 +54,12 @@ export default function EditJob() {
         title: job.title,
         description: job.description,
         location: job.location,
-        salaryMin: job.salary_min || '',
-        salaryMax: job.salary_max || '',
-        jobType: job.job_type,
+        salaryMin: job.salaryMin ?? job.salary_min ?? '',
+        salaryMax: job.salaryMax ?? job.salary_max ?? '',
+        jobType: job.jobType ?? job.job_type ?? 'full-time',
         category: job.category || '',
-        requiredSkills: job.required_skills || [],
-        experienceLevel: job.experience_level || '',
+        requiredSkills: job.requiredSkills ?? job.required_skills ?? [],
+        experienceLevel: job.experienceLevel ?? job.experience_level ?? '',
         status: job.status
       });
     } catch (error) {

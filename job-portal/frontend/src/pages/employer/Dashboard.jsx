@@ -37,8 +37,11 @@ export default function EmployerDashboard() {
   }
 
   const stats = dashboardData?.stats || {};
+  const totalJobs = stats.totalJobs ?? stats.total_jobs ?? 0;
+  const activeJobs = stats.activeJobs ?? stats.active_jobs ?? 0;
+  const totalApplications = stats.totalApplications ?? stats.total_applications ?? 0;
   const recentApplications = dashboardData?.recentApplications || [];
-  const applicationStats = dashboardData?.applicationStats || [];
+  const applicationStats = dashboardData?.applicationStats || dashboardData?.application_stats || [];
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -56,7 +59,7 @@ export default function EmployerDashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome, {user?.profile?.company_name || 'Employer'}
+            Welcome, {user?.profile?.companyName || user?.profile?.company_name || 'Institution / Company'}
           </h1>
           <p className="text-gray-600 mt-1">Manage your job postings and applicants</p>
         </div>
@@ -80,7 +83,7 @@ export default function EmployerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Jobs</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total_jobs || 0}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{totalJobs}</p>
             </div>
             <div className="p-3 bg-primary-100 rounded-lg">
               <Briefcase className="h-6 w-6 text-primary-600" />
@@ -92,7 +95,7 @@ export default function EmployerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Active Jobs</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.active_jobs || 0}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{activeJobs}</p>
             </div>
             <div className="p-3 bg-green-100 rounded-lg">
               <CheckCircle className="h-6 w-6 text-green-600" />
@@ -104,7 +107,7 @@ export default function EmployerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Applicants</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total_applications || 0}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{totalApplications}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <Users className="h-6 w-6 text-blue-600" />
@@ -116,7 +119,7 @@ export default function EmployerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">This Month</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.applicationsThisMonth || 0}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.applicationsThisMonth ?? stats.applications_this_month ?? 0}</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
               <TrendingUp className="h-6 w-6 text-purple-600" />
@@ -139,16 +142,16 @@ export default function EmployerDashboard() {
             {recentApplications.length > 0 ? (
               <div className="space-y-4">
                 {recentApplications.map(app => (
-                  <div key={app.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div key={app.id || app._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                         <span className="text-primary-600 font-medium">
-                          {app.candidate_name?.charAt(0) || 'C'}
+                          {(app.candidateName || app.candidate_name || 'C')?.charAt(0) || 'C'}
                         </span>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{app.candidate_name}</p>
-                        <p className="text-sm text-gray-600">Applied for {app.job_title}</p>
+                        <p className="font-medium text-gray-900">{app.candidateName || app.candidate_name || 'Candidate'}</p>
+                        <p className="text-sm text-gray-600">Applied for {app.jobTitle || app.job_title}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -177,7 +180,7 @@ export default function EmployerDashboard() {
               {['pending', 'reviewed', 'shortlisted', 'rejected'].map(status => {
                 const stat = applicationStats.find(s => s.status === status);
                 const count = stat?.count || 0;
-                const total = stats.total_applications || 1;
+                const total = totalApplications || 1;
                 const percentage = Math.round((count / total) * 100) || 0;
 
                 return (

@@ -15,7 +15,7 @@ export default function JobCard({ job, showCompany = true, initialSaved = false,
     e.stopPropagation();
     
     if (!isAuthenticated || !isCandidate) {
-      toast.error('Please login as a candidate to save jobs');
+      toast.error('Please login as a job seeker to save jobs');
       return;
     }
 
@@ -107,7 +107,7 @@ export default function JobCard({ job, showCompany = true, initialSaved = false,
                   <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors truncate">
                     {job.title}
                   </h3>
-                  <ArrowUpRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+                  <ArrowUpRight className="w-4 h-4 text-gray-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
                 </div>
                 
                 {showCompany && job.companyName && (
@@ -188,7 +188,7 @@ export default function JobCard({ job, showCompany = true, initialSaved = false,
               )}
             </div>
             
-            <span className="text-primary-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+            <span className="text-primary-700 text-sm font-semibold opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity flex items-center">
               View Details
               <ArrowUpRight className="w-4 h-4 ml-1" />
             </span>

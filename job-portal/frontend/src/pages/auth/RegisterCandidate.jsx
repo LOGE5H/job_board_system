@@ -203,7 +203,7 @@ export default function RegisterCandidate() {
             <p className="mt-2 text-gray-600">
               Want to hire?{' '}
               <Link to="/register/employer" className="text-primary-600 hover:text-primary-700 font-medium">
-                Register as Employer
+                Register as Institution / Company
               </Link>
             </p>
           </div>

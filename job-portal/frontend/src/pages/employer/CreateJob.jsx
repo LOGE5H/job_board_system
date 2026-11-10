@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jobsAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import JobDescriptionHelper from '../../components/ai/JobDescriptionHelper';
 import toast from 'react-hot-toast';
 import { Briefcase, X, Plus, AlertCircle } from 'lucide-react';
 
@@ -37,7 +38,9 @@ export default function CreateJob() {
     jobType: 'full-time',
     category: '',
     requiredSkills: [],
-    experienceLevel: ''
+    experienceLevel: '',
+    minExperienceYears: '',
+    minEducation: 'any'
   });
 
   const handleChange = (e) => {
@@ -75,7 +78,8 @@ export default function CreateJob() {
       await jobsAPI.create({
         ...formData,
         salaryMin: formData.salaryMin ? parseInt(formData.salaryMin) : null,
-        salaryMax: formData.salaryMax ? parseInt(formData.salaryMax) : null
+        salaryMax: formData.salaryMax ? parseInt(formData.salaryMax) : null,
+        minExperienceYears: formData.minExperienceYears ? parseFloat(formData.minExperienceYears) : 0
       });
       toast.success('Job posted successfully!');
       navigate('/employer/jobs');
@@ -130,13 +134,22 @@ export default function CreateJob() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description *
               </label>
+              <div className="mb-3">
+                <JobDescriptionHelper
+                  title={formData.title}
+                  skills={formData.requiredSkills}
+                  location={formData.location}
+                  jobType={formData.jobType}
+                  onUse={(draft) => setFormData((f) => ({ ...f, description: draft }))}
+                />
+              </div>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 rows={6}
                 className="input-field"
-                placeholder="Describe the job responsibilities, requirements, and benefits..."
+                placeholder="Describe the job responsibilities, requirements, and benefits... (or generate with AI above)"
                 required
               />
             </div>
@@ -209,6 +222,53 @@ export default function CreateJob() {
                   ))}
                 </select>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* AI Requirements Card */}
+        <div className="card border-l-4 border-l-indigo-500">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
+            <span className="text-2xl">🤖</span> AI Matching Requirements
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            These values are used by the AI engine to score and rank candidates.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Minimum Experience (years)
+              </label>
+              <input
+                type="number"
+                name="minExperienceYears"
+                value={formData.minExperienceYears}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="e.g., 2"
+                min="0"
+                step="0.5"
+              />
+              <p className="text-xs text-gray-400 mt-1">Used to score candidate experience (30% weight)</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Minimum Education
+              </label>
+              <select
+                name="minEducation"
+                value={formData.minEducation}
+                onChange={handleChange}
+                className="input-field"
+              >
+                <option value="any">Any / Not Required</option>
+                <option value="high_school">High School / 12th</option>
+                <option value="diploma">Diploma / Polytechnic</option>
+                <option value="bachelor">Bachelor's (B.Tech / B.E / BCA / B.Sc)</option>
+                <option value="master">Master's (M.Tech / MCA / MBA)</option>
+                <option value="phd">PhD / Doctorate</option>
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Used to score candidate education (20% weight)</p>
             </div>
           </div>
         </div>

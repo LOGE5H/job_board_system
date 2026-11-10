@@ -1,16 +1,17 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
-const { Job, Application, CandidateProfile, EmployerProfile, SavedJob, Notification } = require('../models');
+const { v4: uuidv4 } = require('uuid');
+const db = require('../config/database');
+const { mapJob, mapApplication, mapCandidateProfile, mapEmployerProfile, safeParseJSON } = require('../utils/mappers');
 const { auth, isCandidate } = require('../middleware/auth');
 const { uploadResume, uploadProfilePicture } = require('../middleware/upload');
 
 const router = express.Router();
+const nowISO = () => new Date().toISOString();
 
 // Get candidate dashboard
 router.get('/dashboard', auth, isCandidate, async (req, res) => {
   try {
-    // Get application stats
-    const applications = await Application.find({ candidateId: req.user.id });
+    const applications = db.prepare('SELECT * FROM applications WHERE candidate_id = ?').all(req.user.id);
     const applicationStats = {
       totalApplications: applications.length,
       pending: applications.filter(a => a.status === 'pending').length,
@@ -19,37 +20,34 @@ router.get('/dashboard', auth, isCandidate, async (req, res) => {
       rejected: applications.filter(a => a.status === 'rejected').length
     };
 
-    // Get saved jobs count
-    const savedCount = await SavedJob.countDocuments({ candidateId: req.user.id });
+    const savedRow = db.prepare('SELECT COUNT(*) as c FROM saved_jobs WHERE candidate_id = ?').get(req.user.id);
+    const savedCount = savedRow?.c || 0;
 
-    // Get recent applications with job and employer info
-    const recentApps = await Application.find({ candidateId: req.user.id })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean();
-
-    const recentApplications = [];
-    for (let app of recentApps) {
-      const job = await Job.findById(app.jobId).lean();
-      const employer = await EmployerProfile.findOne({ userId: job?.employerId }).lean();
-      recentApplications.push({
-        ...app,
+    const recentRows = db.prepare('SELECT * FROM applications WHERE candidate_id = ? ORDER BY created_at DESC LIMIT 5').all(req.user.id);
+    const recentApplications = recentRows.map(app => {
+      const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(app.job_id);
+      const employerRow = job ? db.prepare('SELECT * FROM employer_profiles WHERE user_id = ?').get(job.employer_id) : null;
+      return {
+        ...mapApplication(app),
         jobTitle: job?.title,
+        job_title: job?.title,
         location: job?.location,
-        jobType: job?.jobType,
-        companyName: employer?.companyName,
-        logoPath: employer?.logoPath
-      });
-    }
+        jobType: job?.job_type,
+        job_type: job?.job_type,
+        companyName: employerRow?.company_name,
+        company_name: employerRow?.company_name,
+        logoPath: employerRow?.logo_path,
+        logo_path: employerRow?.logo_path,
+      };
+    });
 
-    // Get unread notifications count
-    const unreadCount = await Notification.countDocuments({ userId: req.user.id, isRead: false });
+    const unreadRow = db.prepare('SELECT COUNT(*) as c FROM notifications WHERE user_id = ? AND is_read = 0').get(req.user.id);
 
     res.json({
       stats: {
         ...applicationStats,
         savedJobs: savedCount,
-        unreadNotifications: unreadCount
+        unreadNotifications: unreadRow?.c || 0
       },
       recentApplications
     });
@@ -59,18 +57,11 @@ router.get('/dashboard', auth, isCandidate, async (req, res) => {
   }
 });
 
-// Get/Update candidate profile
+// Get candidate profile
 router.get('/profile', auth, isCandidate, async (req, res) => {
   try {
-    const profile = await CandidateProfile.findOne({ userId: req.user.id }).lean();
-    
-    if (profile) {
-      profile.skills = JSON.parse(profile.skills || '[]');
-      profile.education = JSON.parse(profile.education || '[]');
-      profile.experience = JSON.parse(profile.experience || '[]');
-    }
-
-    res.json(profile);
+    const row = db.prepare('SELECT * FROM candidate_profiles WHERE user_id = ?').get(req.user.id);
+    res.json(row ? mapCandidateProfile(row) : null);
   } catch (error) {
     console.error('Get candidate profile error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -79,35 +70,38 @@ router.get('/profile', auth, isCandidate, async (req, res) => {
 
 router.put('/profile', auth, isCandidate, async (req, res) => {
   try {
-    const {
-      fullName, phone, location, bio, skills, education, experience, preferredLocations
-    } = req.body;
+    const { fullName, phone, location, headline, bio, skills, education, experience, linkedinUrl, githubUrl, portfolioUrl } = req.body;
 
-    const updateData = {};
-    if (fullName) updateData.fullName = fullName;
-    if (phone) updateData.phone = phone;
-    if (location) updateData.location = location;
-    if (bio) updateData.bio = bio;
-    if (skills) updateData.skills = JSON.stringify(skills);
-    if (education) updateData.education = JSON.stringify(education);
-    if (experience) updateData.experience = JSON.stringify(experience);
+    const existing = db.prepare('SELECT * FROM candidate_profiles WHERE user_id = ?').get(req.user.id);
+    if (!existing) return res.status(404).json({ message: 'Profile not found' });
 
-    const profile = await CandidateProfile.findOneAndUpdate(
-      { userId: req.user.id },
-      { $set: updateData },
-      { new: true }
-    ).lean();
-    
-    if (profile) {
-      profile.skills = JSON.parse(profile.skills || '[]');
-      profile.education = JSON.parse(profile.education || '[]');
-      profile.experience = JSON.parse(profile.experience || '[]');
-    }
+    db.prepare(
+      `UPDATE candidate_profiles SET
+        full_name = COALESCE(?, full_name),
+        phone = COALESCE(?, phone),
+        location = COALESCE(?, location),
+        headline = COALESCE(?, headline),
+        bio = COALESCE(?, bio),
+        skills = COALESCE(?, skills),
+        education = COALESCE(?, education),
+        experience = COALESCE(?, experience),
+        linkedin_url = COALESCE(?, linkedin_url),
+        github_url = COALESCE(?, github_url),
+        portfolio_url = COALESCE(?, portfolio_url),
+        updated_at = ?
+      WHERE user_id = ?`
+    ).run(
+      fullName ?? null, phone ?? null, location ?? null, headline ?? null, bio ?? null,
+      skills ? JSON.stringify(skills) : null,
+      education ? JSON.stringify(education) : null,
+      experience ? JSON.stringify(experience) : null,
+      linkedinUrl ?? null, githubUrl ?? null, portfolioUrl ?? null,
+      nowISO(), req.user.id
+    );
 
-    res.json({
-      message: 'Profile updated successfully',
-      profile
-    });
+    const fresh = db.prepare('SELECT * FROM candidate_profiles WHERE user_id = ?').get(req.user.id);
+    const profile = mapCandidateProfile(fresh);
+    res.json({ message: 'Profile updated successfully', profile });
   } catch (error) {
     console.error('Update candidate profile error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -120,18 +114,9 @@ router.post('/resume', auth, isCandidate, uploadResume.single('resume'), async (
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-
     const resumePath = `/uploads/resumes/${req.file.filename}`;
-
-    await CandidateProfile.findOneAndUpdate(
-      { userId: req.user.id },
-      { resumePath }
-    );
-
-    res.json({
-      message: 'Resume uploaded successfully',
-      resumePath
-    });
+    db.prepare('UPDATE candidate_profiles SET resume_path = ?, updated_at = ? WHERE user_id = ?').run(resumePath, nowISO(), req.user.id);
+    res.json({ message: 'Resume uploaded successfully', resumePath, resume_path: resumePath });
   } catch (error) {
     console.error('Upload resume error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -144,18 +129,9 @@ router.post('/profile-picture', auth, isCandidate, uploadProfilePicture.single('
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-
     const picturePath = `/uploads/profiles/${req.file.filename}`;
-
-    await CandidateProfile.findOneAndUpdate(
-      { userId: req.user.id },
-      { profilePicture: picturePath }
-    );
-
-    res.json({
-      message: 'Profile picture uploaded successfully',
-      picturePath
-    });
+    db.prepare('UPDATE candidate_profiles SET profile_picture = ?, updated_at = ? WHERE user_id = ?').run(picturePath, nowISO(), req.user.id);
+    res.json({ message: 'Profile picture uploaded successfully', picturePath, picture_path: picturePath });
   } catch (error) {
     console.error('Upload profile picture error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -168,55 +144,36 @@ router.post('/apply/:jobId', auth, isCandidate, uploadResume.single('resume'), a
     const { coverLetter } = req.body;
     const jobId = req.params.jobId;
 
-    // Check if job exists and is open
-    const job = await Job.findOne({ _id: jobId, status: 'open' });
+    const job = db.prepare("SELECT * FROM jobs WHERE id = ? AND status = 'open'").get(jobId);
     if (!job) {
       return res.status(404).json({ message: 'Job not found or no longer accepting applications' });
     }
 
-    // Check if already applied
-    const existingApplication = await Application.findOne({ jobId, candidateId: req.user.id });
-    
+    const existingApplication = db.prepare('SELECT * FROM applications WHERE job_id = ? AND candidate_id = ?').get(jobId, req.user.id);
     if (existingApplication) {
       return res.status(400).json({ message: 'You have already applied to this job' });
     }
 
-    // Get candidate's resume path
-    const profile = await CandidateProfile.findOne({ userId: req.user.id });
-    
-    // Use uploaded resume or existing profile resume
-    let resumePath = req.file ? `/uploads/resumes/${req.file.filename}` : profile?.resumePath;
+    const profileRow = db.prepare('SELECT * FROM candidate_profiles WHERE user_id = ?').get(req.user.id);
+    const profile = profileRow ? mapCandidateProfile(profileRow) : null;
 
+    let resumePath = req.file ? `/uploads/resumes/${req.file.filename}` : profile?.resumePath;
     if (!resumePath) {
       return res.status(400).json({ message: 'Please upload a resume to apply' });
     }
 
-    // Create application
-    const application = await Application.create({
-      jobId,
-      candidateId: req.user.id,
-      employerId: job.employerId,
-      resumePath,
-      coverLetter: coverLetter || ''
-    });
+    const appId = uuidv4();
+    db.prepare(
+      'INSERT INTO applications (id, job_id, candidate_id, employer_id, resume_path, cover_letter, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(appId, jobId, req.user.id, job.employer_id, resumePath, coverLetter || '', 'pending', nowISO(), nowISO());
 
-    // Update job application count
-    job.applicationCount = (job.applicationCount || 0) + 1;
-    await job.save();
+    db.prepare('UPDATE jobs SET application_count = COALESCE(application_count,0) + 1 WHERE id = ?').run(jobId);
 
-    // Create notification for employer
-    await Notification.create({
-      userId: job.employerId,
-      type: 'new_application',
-      title: 'New Application Received',
-      message: `${profile?.fullName || 'A candidate'} applied for ${job.title}`,
-      relatedId: jobId
-    });
+    db.prepare('INSERT INTO notifications (id, user_id, type, title, message, related_id, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(uuidv4(), job.employer_id, 'new_application', 'New Application Received',
+        `${profile?.fullName || 'A candidate'} applied for ${job.title}`, jobId, 0, nowISO());
 
-    res.status(201).json({
-      message: 'Application submitted successfully',
-      applicationId: application._id
-    });
+    res.status(201).json({ message: 'Application submitted successfully', applicationId: appId, application_id: appId });
   } catch (error) {
     console.error('Apply to job error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -228,35 +185,31 @@ router.get('/applications', auth, isCandidate, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
     const status = req.query.status;
 
-    const filter = { candidateId: req.user.id };
-    if (status) filter.status = status;
-
-    const total = await Application.countDocuments(filter);
-
-    const apps = await Application.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    const applications = [];
-    for (let app of apps) {
-      const job = await Job.findById(app.jobId).lean();
-      const employer = await EmployerProfile.findOne({ userId: job?.employerId }).lean();
-      applications.push({
-        ...app,
-        jobTitle: job?.title,
-        location: job?.location,
-        jobType: job?.jobType,
-        salaryMin: job?.salaryMin,
-        salaryMax: job?.salaryMax,
-        companyName: employer?.companyName,
-        companyLogo: employer?.logoPath
-      });
+    let rows;
+    if (status) {
+      rows = db.prepare('SELECT * FROM applications WHERE candidate_id = ? AND status = ? ORDER BY created_at DESC').all(req.user.id, status);
+    } else {
+      rows = db.prepare('SELECT * FROM applications WHERE candidate_id = ? ORDER BY created_at DESC').all(req.user.id);
     }
+    const total = rows.length;
+    const paged = rows.slice((page - 1) * limit, page * limit);
+
+    const applications = paged.map(app => {
+      const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(app.job_id);
+      const employerRow = job ? db.prepare('SELECT * FROM employer_profiles WHERE user_id = ?').get(job.employer_id) : null;
+      return {
+        ...mapApplication(app),
+        jobTitle: job?.title, job_title: job?.title,
+        location: job?.location,
+        jobType: job?.job_type, job_type: job?.job_type,
+        salaryMin: job?.salary_min, salary_min: job?.salary_min,
+        salaryMax: job?.salary_max, salary_max: job?.salary_max,
+        companyName: employerRow?.company_name, company_name: employerRow?.company_name,
+        companyLogo: employerRow?.logo_path, company_logo: employerRow?.logo_path,
+      };
+    });
 
     res.json({
       applications,
@@ -276,22 +229,16 @@ router.get('/applications', auth, isCandidate, async (req, res) => {
 router.post('/saved-jobs/:jobId', auth, isCandidate, async (req, res) => {
   try {
     const jobId = req.params.jobId;
-
-    // Check if job exists
-    const job = await Job.findById(jobId);
+    const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
     }
-
-    // Check if already saved
-    const existing = await SavedJob.findOne({ candidateId: req.user.id, jobId });
-    
+    const existing = db.prepare('SELECT * FROM saved_jobs WHERE candidate_id = ? AND job_id = ?').get(req.user.id, jobId);
     if (existing) {
       return res.status(400).json({ message: 'Job already saved' });
     }
-
-    await SavedJob.create({ candidateId: req.user.id, jobId });
-
+    db.prepare('INSERT INTO saved_jobs (id, candidate_id, job_id, created_at) VALUES (?, ?, ?, ?)')
+      .run(uuidv4(), req.user.id, jobId, nowISO());
     res.json({ message: 'Job saved successfully' });
   } catch (error) {
     console.error('Save job error:', error);
@@ -302,8 +249,7 @@ router.post('/saved-jobs/:jobId', auth, isCandidate, async (req, res) => {
 // Remove saved job
 router.delete('/saved-jobs/:jobId', auth, isCandidate, async (req, res) => {
   try {
-    await SavedJob.findOneAndDelete({ candidateId: req.user.id, jobId: req.params.jobId });
-
+    db.prepare('DELETE FROM saved_jobs WHERE candidate_id = ? AND job_id = ?').run(req.user.id, req.params.jobId);
     res.json({ message: 'Job removed from saved list' });
   } catch (error) {
     console.error('Remove saved job error:', error);
@@ -316,30 +262,19 @@ router.get('/saved-jobs', auth, isCandidate, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
 
-    const total = await SavedJob.countDocuments({ candidateId: req.user.id });
-
-    const saved = await SavedJob.find({ candidateId: req.user.id })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const totalRow = db.prepare('SELECT COUNT(*) as c FROM saved_jobs WHERE candidate_id = ?').get(req.user.id);
+    const total = totalRow?.c || 0;
+    const saved = db.prepare('SELECT * FROM saved_jobs WHERE candidate_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?')
+      .all(req.user.id, limit, (page - 1) * limit);
 
     const savedJobs = [];
-    for (let s of saved) {
-      const job = await Job.findById(s.jobId).lean();
-      const employer = await EmployerProfile.findOne({ userId: job?.employerId }).lean();
-      
-      if (job) {
-        savedJobs.push({
-          ...job,
-          savedAt: s.createdAt,
-          requiredSkills: JSON.parse(job.requiredSkills || '[]'),
-          companyName: employer?.companyName,
-          logoPath: employer?.logoPath
-        });
-      }
+    for (const s of saved) {
+      const jobRow = db.prepare('SELECT * FROM jobs WHERE id = ?').get(s.job_id);
+      if (!jobRow) continue;
+      const employerRow = db.prepare('SELECT * FROM employer_profiles WHERE user_id = ?').get(jobRow.employer_id);
+      const employer = employerRow ? mapEmployerProfile(employerRow) : null;
+      savedJobs.push({ ...mapJob(jobRow, employer), savedAt: s.created_at, saved_at: s.created_at });
     }
 
     res.json({
@@ -359,9 +294,8 @@ router.get('/saved-jobs', auth, isCandidate, async (req, res) => {
 // Check if job is saved
 router.get('/saved-jobs/check/:jobId', auth, isCandidate, async (req, res) => {
   try {
-    const saved = await SavedJob.findOne({ candidateId: req.user.id, jobId: req.params.jobId });
-
-    res.json({ isSaved: !!saved });
+    const saved = db.prepare('SELECT * FROM saved_jobs WHERE candidate_id = ? AND job_id = ?').get(req.user.id, req.params.jobId);
+    res.json({ isSaved: !!saved, is_saved: !!saved });
   } catch (error) {
     console.error('Check saved job error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -371,11 +305,11 @@ router.get('/saved-jobs/check/:jobId', auth, isCandidate, async (req, res) => {
 // Check if already applied to a job
 router.get('/applications/check/:jobId', auth, isCandidate, async (req, res) => {
   try {
-    const application = await Application.findOne({ candidateId: req.user.id, jobId: req.params.jobId });
-
-    res.json({ 
+    const application = db.prepare('SELECT * FROM applications WHERE candidate_id = ? AND job_id = ?').get(req.user.id, req.params.jobId);
+    res.json({
       hasApplied: !!application,
-      application: application ? { id: application._id, status: application.status } : null
+      has_applied: !!application,
+      application: application ? { id: application.id, _id: application.id, status: application.status } : null
     });
   } catch (error) {
     console.error('Check application error:', error);
@@ -386,57 +320,42 @@ router.get('/applications/check/:jobId', auth, isCandidate, async (req, res) => 
 // Get recommended jobs based on skills and preferences
 router.get('/recommended-jobs', auth, isCandidate, async (req, res) => {
   try {
-    const profile = await CandidateProfile.findOne({ userId: req.user.id });
-
-    if (!profile) {
+    const profileRow = db.prepare('SELECT * FROM candidate_profiles WHERE user_id = ?').get(req.user.id);
+    if (!profileRow) {
       return res.json([]);
     }
+    const profile = mapCandidateProfile(profileRow);
+    const skills = profile.skills || [];
 
-    const skills = JSON.parse(profile.skills || '[]');
+    const appliedRows = db.prepare('SELECT job_id FROM applications WHERE candidate_id = ?').all(req.user.id);
+    const appliedJobIds = new Set(appliedRows.map(a => a.job_id));
 
-    // Get applied job IDs to exclude
-    const appliedJobs = await Application.find({ candidateId: req.user.id }).select('jobId');
-    const appliedJobIds = appliedJobs.map(a => a.jobId.toString());
+    let jobs = db.prepare("SELECT * FROM jobs WHERE status = 'open' ORDER BY created_at DESC LIMIT 100").all();
+    jobs = jobs.filter(job => !appliedJobIds.has(job.id));
 
-    // Get all open jobs
-    let jobs = await Job.find({ status: 'open' })
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .lean();
-
-    // Filter out already applied jobs
-    jobs = jobs.filter(job => !appliedJobIds.includes(job._id.toString()));
-
-    // Get employer profiles
-    const employerIds = [...new Set(jobs.map(j => j.employerId.toString()))];
-    const profiles = await EmployerProfile.find({ userId: { $in: employerIds } }).lean();
+    const employerIds = [...new Set(jobs.map(j => j.employer_id))];
     const profileMap = {};
-    profiles.forEach(p => { profileMap[p.userId.toString()] = p; });
+    for (const id of employerIds) {
+      const r = db.prepare('SELECT * FROM employer_profiles WHERE user_id = ?').get(id);
+      if (r) profileMap[id] = mapEmployerProfile(r);
+    }
 
-    // Calculate match score for each job
-    const scoredJobs = jobs.map(job => {
-      const jobSkills = JSON.parse(job.requiredSkills || '[]').map(s => s.toLowerCase());
-      const candidateSkillsLower = skills.map(s => s.toLowerCase());
-
-      // Skills match
-      const matchingSkills = jobSkills.filter(js => 
+    const scoredJobs = jobs.map(jobRow => {
+      const jobSkills = safeParseJSON(jobRow.required_skills).map(s => String(s).toLowerCase());
+      const candidateSkillsLower = skills.map(s => String(s).toLowerCase());
+      const matchingSkills = jobSkills.filter(js =>
         candidateSkillsLower.some(cs => cs.includes(js) || js.includes(cs))
       );
-      const skillScore = jobSkills.length > 0 
-        ? (matchingSkills.length / jobSkills.length) * 100 
-        : 0;
-
+      const skillScore = jobSkills.length > 0 ? (matchingSkills.length / jobSkills.length) * 100 : 0;
       return {
-        ...job,
-        requiredSkills: JSON.parse(job.requiredSkills || '[]'),
-        companyName: profileMap[job.employerId.toString()]?.companyName,
-        logoPath: profileMap[job.employerId.toString()]?.logoPath,
+        ...mapJob(jobRow, profileMap[jobRow.employer_id] || null),
         matchScore: Math.round(skillScore),
-        matchingSkills
+        match_score: Math.round(skillScore),
+        matchingSkills,
+        matching_skills: matchingSkills
       };
     });
 
-    // Sort by match score and return top 10
     const recommended = scoredJobs
       .filter(job => job.matchScore > 0)
       .sort((a, b) => b.matchScore - a.matchScore)

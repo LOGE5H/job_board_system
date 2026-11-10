@@ -9,6 +9,7 @@ export default function EmployerProfile() {
   const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [formData, setFormData] = useState({
     companyName: '',
@@ -16,10 +17,9 @@ export default function EmployerProfile() {
     phone: '',
     website: '',
     location: '',
-    description: '',
+    companyDescription: '',
     industry: '',
-    companySize: '',
-    foundedYear: ''
+    companySize: ''
   });
 
   const companySizes = [
@@ -37,22 +37,21 @@ export default function EmployerProfile() {
 
   const fetchProfile = async () => {
     try {
-      const res = await authAPI.getProfile();
-      const profile = res.data.user;
+      const res = await authAPI.getMe();
+      const me = res.data;
+      const profile = me?.profile || {};
       setFormData({
-        companyName: profile.company_name || '',
-        email: profile.email || '',
+        companyName: profile.companyName || profile.company_name || '',
+        email: me.email || '',
         phone: profile.phone || '',
         website: profile.website || '',
         location: profile.location || '',
-        description: profile.description || '',
+        companyDescription: profile.companyDescription || profile.company_description || '',
         industry: profile.industry || '',
-        companySize: profile.company_size || '',
-        foundedYear: profile.founded_year || ''
+        companySize: profile.companySize || profile.company_size || ''
       });
-      if (profile.company_logo) {
-        setLogoPreview(`http://localhost:5000${profile.company_logo}`);
-      }
+      const logo = profile.logoPath || profile.logo_path;
+      if (logo) setLogoPreview(logo);
     } catch (error) {
       toast.error('Failed to load profile');
     } finally {
@@ -64,39 +63,45 @@ export default function EmployerProfile() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleLogoChange = (e) => {
+  const handleLogoChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Logo must be less than 5MB');
-        return;
-      }
-      setLogoPreview(URL.createObjectURL(file));
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Logo must be less than 2MB (PNG/JPG/GIF)');
+      return;
+    }
+    setLogoPreview(URL.createObjectURL(file));
+    setUploadingLogo(true);
+    try {
+      const fd = new FormData();
+      fd.append('logo', file);
+      const res = await employerAPI.uploadLogo(fd);
+      const logoPath = res.data.logoPath;
+      setLogoPreview(logoPath);
+      updateUser({ ...(user || {}), profile: { ...(user?.profile || {}), logoPath } });
+      toast.success('Logo uploaded!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Logo upload failed');
+    } finally {
+      setUploadingLogo(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('companyName', formData.companyName);
-      formDataToSend.append('phone', formData.phone);
-      formDataToSend.append('website', formData.website);
-      formDataToSend.append('location', formData.location);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('industry', formData.industry);
-      formDataToSend.append('companySize', formData.companySize);
-      formDataToSend.append('foundedYear', formData.foundedYear);
-
-      const logoInput = document.getElementById('logo-input');
-      if (logoInput.files[0]) {
-        formDataToSend.append('logo', logoInput.files[0]);
-      }
-
-      const res = await employerAPI.updateProfile(formDataToSend);
-      updateUser(res.data.user);
+      const res = await employerAPI.updateProfile({
+        companyName: formData.companyName,
+        companyDescription: formData.companyDescription,
+        industry: formData.industry,
+        companySize: formData.companySize,
+        website: formData.website,
+        location: formData.location,
+        phone: formData.phone,
+      });
+      const profile = res.data.profile;
+      updateUser({ ...(user || {}), profile: { ...(user?.profile || {}), ...profile } });
       toast.success('Profile updated successfully!');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update profile');
@@ -113,15 +118,17 @@ export default function EmployerProfile() {
     );
   }
 
+  const verified = user?.emailVerified ?? user?.profile?.isVerified ?? true;
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center">
           <Building2 className="h-8 w-8 mr-3 text-primary-600" />
-          Company Profile
+          Institution / Company Profile
         </h1>
         <p className="text-gray-600 mt-2">
-          Manage your company information and settings
+          Manage your organization information — this is the account that posts jobs
         </p>
       </div>
 
@@ -129,7 +136,7 @@ export default function EmployerProfile() {
         {/* Company Logo */}
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Company Logo</h2>
-          
+
           <div className="flex items-center space-x-6">
             <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
               {logoPreview ? (
@@ -142,21 +149,21 @@ export default function EmployerProfile() {
                 <Building2 className="h-12 w-12 text-gray-400" />
               )}
             </div>
-            
+
             <div>
               <label className="btn-secondary cursor-pointer inline-flex items-center">
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Logo
+                {uploadingLogo ? 'Uploading…' : 'Upload Logo'}
                 <input
                   id="logo-input"
                   type="file"
-                  accept="image/*"
+                  accept=".png,.jpg,.jpeg,.gif"
                   onChange={handleLogoChange}
                   className="hidden"
                 />
               </label>
               <p className="text-sm text-gray-500 mt-2">
-                PNG, JPG up to 5MB. Recommended size: 200x200px
+                PNG, JPG, GIF up to 2MB. Recommended size: 200x200px
               </p>
             </div>
           </div>
@@ -165,12 +172,12 @@ export default function EmployerProfile() {
         {/* Basic Information */}
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <Building2 className="h-4 w-4 inline mr-1" />
-                Company Name *
+                Organization / Company Name *
               </label>
               <input
                 type="text"
@@ -245,9 +252,9 @@ export default function EmployerProfile() {
 
         {/* Company Details */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Company Details</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Organization Details</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Industry
@@ -267,7 +274,7 @@ export default function EmployerProfile() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company Size
+                Organization Size
               </label>
               <select
                 name="companySize"
@@ -281,36 +288,20 @@ export default function EmployerProfile() {
                 ))}
               </select>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Founded Year
-              </label>
-              <input
-                type="number"
-                name="foundedYear"
-                value={formData.foundedYear}
-                onChange={handleChange}
-                className="input-field"
-                min="1800"
-                max={new Date().getFullYear()}
-                placeholder="2020"
-              />
-            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <FileText className="h-4 w-4 inline mr-1" />
-              About Company
+              About Organization
             </label>
             <textarea
-              name="description"
-              value={formData.description}
+              name="companyDescription"
+              value={formData.companyDescription}
               onChange={handleChange}
               rows={6}
               className="input-field"
-              placeholder="Tell candidates about your company, culture, and what makes it a great place to work..."
+              placeholder="Tell job seekers about your organization, culture, and what makes it a great place to work..."
             />
           </div>
         </div>
@@ -318,23 +309,23 @@ export default function EmployerProfile() {
         {/* Account Status */}
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Status</h2>
-          
+
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
               <p className="font-medium text-gray-900">Account Verification</p>
               <p className="text-sm text-gray-600">
-                {user?.is_verified 
-                  ? 'Your account is verified and active'
-                  : 'Your account is pending verification'
+                {verified
+                  ? 'Your institution account is verified and can post jobs'
+                  : 'Please verify your email to post jobs'
                 }
               </p>
             </div>
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              user?.is_verified
+              verified
                 ? 'bg-green-100 text-green-800'
                 : 'bg-yellow-100 text-yellow-800'
             }`}>
-              {user?.is_verified ? 'Verified' : 'Pending'}
+              {verified ? 'Verified' : 'Pending'}
             </span>
           </div>
         </div>
@@ -344,18 +335,18 @@ export default function EmployerProfile() {
           <button
             type="submit"
             disabled={saving}
-            className="btn-primary flex items-center"
+            className="btn-primary"
           >
             {saving ? (
-              <>
+              <span className="inline-flex items-center">
                 <LoadingSpinner size="sm" className="mr-2" />
                 Saving...
-              </>
+              </span>
             ) : (
-              <>
+              <span className="inline-flex items-center">
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
-              </>
+              </span>
             )}
           </button>
         </div>

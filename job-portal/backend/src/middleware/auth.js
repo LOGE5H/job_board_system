@@ -1,15 +1,20 @@
 const jwt = require('jsonwebtoken');
+const { normalizeRole } = require('../utils/roles');
 
 // Authenticate user middleware
 const auth = (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({ message: 'No authentication token, access denied' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'job_portal_secret_key_change_in_production');
+    // Normalize legacy roles: 'institution'/'company' -> 'employer'
+    if (decoded && decoded.role) {
+      decoded.role = normalizeRole(decoded.role);
+    }
     req.user = decoded;
     next();
   } catch (error) {
@@ -17,27 +22,34 @@ const auth = (req, res, next) => {
   }
 };
 
-// Check if user is employer
+// Check if user is employer (job poster: Institution / Company).
+// Accepts 'employer', 'institution', 'company' for backward compatibility.
 const isEmployer = (req, res, next) => {
-  if (req.user.role !== 'employer') {
-    return res.status(403).json({ message: 'Access denied. Employer only.' });
+  const role = normalizeRole(req.user.role);
+  if (role !== 'employer') {
+    return res.status(403).json({ message: 'Access denied. Institution / Company account only. Only institutions/companies can post jobs.' });
   }
+  req.user.role = 'employer';
   next();
 };
 
-// Check if user is candidate
+// Check if user is candidate (job seeker)
 const isCandidate = (req, res, next) => {
-  if (req.user.role !== 'candidate') {
-    return res.status(403).json({ message: 'Access denied. Candidate only.' });
+  const role = normalizeRole(req.user.role);
+  if (role !== 'candidate') {
+    return res.status(403).json({ message: 'Access denied. Job Seeker account only.' });
   }
+  req.user.role = 'candidate';
   next();
 };
 
 // Check if employer email is verified
 const isVerifiedEmployer = (req, res, next) => {
-  if (req.user.role !== 'employer') {
-    return res.status(403).json({ message: 'Access denied. Employer only.' });
+  const role = normalizeRole(req.user.role);
+  if (role !== 'employer') {
+    return res.status(403).json({ message: 'Access denied. Institution / Company account only.' });
   }
+  req.user.role = 'employer';
   if (!req.user.emailVerified) {
     return res.status(403).json({ message: 'Please verify your email before posting jobs.' });
   }

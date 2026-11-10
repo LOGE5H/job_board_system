@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Local configuration and data
+.env
+.env.*
+!.env.example
+backend/data/
+mongodb_data/
+backend/uploads/
+
+# Build and tool output
+frontend/dist/
+*.log
+.vite/
+
+# Local test artifacts
+backend/smoke-test-results/

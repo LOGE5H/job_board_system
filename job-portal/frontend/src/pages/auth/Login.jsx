@@ -25,7 +25,7 @@ export default function Login() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Candidate Login Card */}
+          {/* Job Seeker Login Card */}
           <Link
             to="/login/candidate"
             className="group relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 border-2 border-transparent hover:border-emerald-300 shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-2 overflow-hidden"
@@ -37,8 +37,9 @@ export default function Login() {
                 <Search className="h-10 w-10 text-white" />
               </div>
               
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">I'm a Candidate</h3>
-              <p className="text-gray-500 mb-6">Looking for amazing opportunities</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">I'm a Job Seeker</h3>
+              <p className="text-gray-500 mb-2">Looking for amazing opportunities</p>
+              <p className="mb-5"><span className="badge badge-success">Applies to jobs</span></p>
               
               <ul className="text-left space-y-3 mb-8">
                 {['Search and apply for jobs', 'Track your applications', 'Get personalized recommendations'].map((item, i) => (
@@ -52,13 +53,13 @@ export default function Login() {
               </ul>
               
               <div className="inline-flex items-center justify-center w-full py-3 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl group-hover:from-emerald-600 group-hover:to-teal-600 transition-all shadow-lg shadow-emerald-500/25">
-                Continue as Candidate
+                Continue as Job Seeker
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </Link>
 
-          {/* Employer Login Card */}
+          {/* Institution Login Card */}
           <Link
             to="/login/employer"
             className="group relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 border-2 border-transparent hover:border-primary-300 shadow-xl hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-300 hover:-translate-y-2 overflow-hidden"
@@ -70,8 +71,9 @@ export default function Login() {
                 <Building2 className="h-10 w-10 text-white" />
               </div>
               
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">I'm an Employer</h3>
-              <p className="text-gray-500 mb-6">Looking to hire top talent</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">I'm an Institution / Company</h3>
+              <p className="text-gray-500 mb-2">Looking to hire top talent</p>
+              <p className="mb-5"><span className="badge badge-primary">Posts jobs</span></p>
               
               <ul className="text-left space-y-3 mb-8">
                 {['Post job openings', 'Review applications', 'Hire the best candidates'].map((item, i) => (
@@ -85,7 +87,7 @@ export default function Login() {
               </ul>
               
               <div className="inline-flex items-center justify-center w-full py-3 px-6 bg-gradient-to-r from-primary-500 to-purple-600 text-white font-semibold rounded-xl group-hover:from-primary-600 group-hover:to-purple-700 transition-all shadow-lg shadow-primary-500/25">
-                Continue as Employer
+                Continue as Institution
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -96,11 +98,11 @@ export default function Login() {
           <p className="text-gray-600">
             Don't have an account?{' '}
             <Link to="/register/candidate" className="text-emerald-600 hover:text-emerald-700 font-semibold hover:underline">
-              Sign up as Candidate
+              Sign up as Job Seeker
             </Link>
             {' '}or{' '}
             <Link to="/register/employer" className="text-primary-600 hover:text-primary-700 font-semibold hover:underline">
-              Sign up as Employer
+              Sign up as Institution / Company
             </Link>
           </p>
         </div>

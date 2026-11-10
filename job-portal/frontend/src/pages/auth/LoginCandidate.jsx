@@ -20,7 +20,7 @@ export default function LoginCandidate() {
       const user = await login(email, password);
       
       if (user.role !== 'candidate') {
-        toast.error('Please use the employer login page');
+        toast.error('Please use the institution login page');
         navigate('/login/employer');
         return;
       }
@@ -49,7 +49,7 @@ export default function LoginCandidate() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
             <Search className="h-8 w-8 text-green-600" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Candidate Login</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Job Seeker Login</h2>
           <p className="mt-2 text-gray-600">Sign in to find your dream job</p>
         </div>
 
@@ -116,7 +116,7 @@ export default function LoginCandidate() {
             <p className="text-gray-600">
               Don't have an account?{' '}
               <Link to="/register/candidate" className="text-green-600 hover:text-green-700 font-medium">
-                Register as Candidate
+                Register as Job Seeker
               </Link>
             </p>
           </div>
@@ -125,7 +125,7 @@ export default function LoginCandidate() {
             <p className="text-sm text-gray-500">
               Are you an employer?{' '}
               <Link to="/login/employer" className="text-primary-600 hover:text-primary-700 font-medium">
-                Login as Employer
+                Login as Institution
               </Link>
             </p>
           </div>

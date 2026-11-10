@@ -72,7 +72,7 @@ export default function RegisterEmployer() {
           <Link to="/" className="inline-flex items-center justify-center">
             <Briefcase className="h-10 w-10 text-primary-600" />
           </Link>
-          <h2 className="mt-4 text-3xl font-bold text-gray-900">Register as Employer</h2>
+          <h2 className="mt-4 text-3xl font-bold text-gray-900">Register as Institution / Company</h2>
           <p className="mt-2 text-gray-600">Start hiring top talent today</p>
         </div>
 
@@ -237,7 +237,7 @@ export default function RegisterEmployer() {
               disabled={loading}
               className="btn-primary w-full py-3"
             >
-              {loading ? 'Creating Account...' : 'Create Employer Account'}
+              {loading ? 'Creating Account...' : 'Create Institution Account'}
             </button>
           </form>
 
@@ -251,7 +251,7 @@ export default function RegisterEmployer() {
             <p className="mt-2 text-gray-600">
               Looking for a job?{' '}
               <Link to="/register/candidate" className="text-primary-600 hover:text-primary-700 font-medium">
-                Register as Candidate
+                Register as Job Seeker
               </Link>
             </p>
           </div>

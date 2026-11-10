@@ -28,6 +28,39 @@ const applicationSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'reviewed', 'shortlisted', 'rejected', 'hired'],
     default: 'pending'
+  },
+  // AI Matching Scores (populated by /rank endpoint)
+  skillMatchPct: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  experienceMatchPct: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  educationMatchPct: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  overallMatchPct: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  rankPosition: {
+    type: Number,
+    default: 0
+  },
+  aiAnalyzedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true

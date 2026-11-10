@@ -78,7 +78,7 @@ export default function JobDetails() {
     }
 
     if (!isCandidate) {
-      toast.error('Only candidates can apply to jobs');
+      toast.error('Only job seekers can apply to jobs');
       return;
     }
 
@@ -104,14 +104,14 @@ export default function JobDetails() {
 
   const handleSaveJob = async () => {
     if (!isAuthenticated) {
-      toast.error('Please login as a candidate to save jobs');
+      toast.error('Please login as a job seeker to save jobs');
       sessionStorage.setItem('redirectAfterLogin', `/jobs/${id}`);
       navigate('/login/candidate');
       return;
     }
 
     if (!isCandidate) {
-      toast.error('Only candidates can save jobs');
+      toast.error('Only job seekers can save jobs');
       return;
     }
 
@@ -273,14 +273,14 @@ export default function JobDetails() {
                 <button
                   onClick={() => {
                     if (!isAuthenticated) {
-                      toast.error('Please login as a candidate to apply');
+                      toast.error('Please login as a job seeker to apply');
                       // Save the job URL to redirect back after login
                       sessionStorage.setItem('redirectAfterLogin', `/jobs/${id}`);
                       navigate('/login/candidate');
                       return;
                     }
                     if (!isCandidate) {
-                      toast.error('Only candidates can apply to jobs');
+                      toast.error('Only job seekers can apply to jobs');
                       return;
                     }
                     setShowApplyModal(true);
@@ -420,7 +420,7 @@ export default function JobDetails() {
                   onChange={(e) => setCoverLetter(e.target.value)}
                   rows={4}
                   className="input-field"
-                  placeholder="Tell the employer why you're a great fit..."
+                  placeholder="Tell the institution why you're a great fit..."
                 />
               </div>
 

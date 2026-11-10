@@ -46,9 +46,9 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* For Candidates */}
+          {/* For Job Seekers */}
           <div>
-            <h3 className="font-semibold text-lg mb-4 text-white">For Candidates</h3>
+            <h3 className="font-semibold text-lg mb-4 text-white">For Job Seekers</h3>
             <ul className="space-y-3">
               {[
                 { to: '/jobs', label: 'Browse Jobs' },
@@ -69,9 +69,9 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* For Employers */}
+          {/* For Institutions / Companies */}
           <div>
-            <h3 className="font-semibold text-lg mb-4 text-white">For Employers</h3>
+            <h3 className="font-semibold text-lg mb-4 text-white">For Institutions / Companies</h3>
             <ul className="space-y-3">
               {[
                 { to: '/register/employer', label: 'Post a Job' },

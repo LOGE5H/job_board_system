@@ -3,6 +3,22 @@ import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
+// Role helpers — 'employer' (stored) === Institution / Company (job poster).
+// Accepts legacy aliases so old tokens keep working.
+const normalizeRole = (role) => {
+  if (!role) return role;
+  const r = String(role).toLowerCase();
+  if (['employer', 'institution', 'company'].includes(r)) return 'employer';
+  return r;
+};
+
+export const ROLE_LABELS = {
+  employer: 'Institution / Company',
+  candidate: 'Job Seeker',
+};
+
+export const roleLabel = (role) => ROLE_LABELS[normalizeRole(role)] || role;
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -18,17 +34,30 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-    
+
     if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed?.role) parsed.role = normalizeRole(parsed.role);
+        setUser(parsed);
+      } catch {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setLoading(false);
+        return;
+      }
       // Verify token is still valid
       authAPI.getMe()
         .then(res => {
-          setUser(res.data);
-          localStorage.setItem('user', JSON.stringify(res.data));
+          const fresh = res.data;
+          if (fresh?.role) fresh.role = normalizeRole(fresh.role);
+          setUser(fresh);
+          localStorage.setItem('user', JSON.stringify(fresh));
         })
         .catch(() => {
-          logout();
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
         })
         .finally(() => setLoading(false));
     } else {
@@ -38,11 +67,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await authAPI.login({ email, password });
-    const { token, user } = response.data;
+    const { token, user: loginUser } = response.data;
+    if (loginUser?.role) loginUser.role = normalizeRole(loginUser.role);
     localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    setUser(user);
-    return user;
+    localStorage.setItem('user', JSON.stringify(loginUser));
+    setUser(loginUser);
+    return loginUser;
   };
 
   const registerEmployer = async (data) => {
@@ -66,17 +96,22 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const normalizedRole = normalizeRole(user?.role);
+
   const value = {
-    user,
+    user: user ? { ...user, role: normalizedRole } : user,
     loading,
     login,
     logout,
     registerEmployer,
     registerCandidate,
+    registerInstitution: registerEmployer,
     updateUser,
     isAuthenticated: !!user,
-    isEmployer: user?.role === 'employer',
-    isCandidate: user?.role === 'candidate',
+    isEmployer: normalizedRole === 'employer',
+    isInstitution: normalizedRole === 'employer',
+    isCandidate: normalizedRole === 'candidate',
+    roleLabel: user ? roleLabel(user.role) : null,
     isEmailVerified: user?.emailVerified
   };
 

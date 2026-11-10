@@ -104,6 +104,8 @@ const initDatabase = async () => {
       category TEXT,
       required_skills TEXT,
       experience_level TEXT,
+      min_experience_years REAL DEFAULT 0,
+      min_education TEXT DEFAULT 'any',
       status TEXT DEFAULT 'open' CHECK(status IN ('open', 'closed', 'hidden')),
       report_count INTEGER DEFAULT 0,
       application_count INTEGER DEFAULT 0,
@@ -122,6 +124,12 @@ const initDatabase = async () => {
       resume_path TEXT,
       cover_letter TEXT,
       status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'reviewed', 'shortlisted', 'rejected', 'hired')),
+      skill_match_pct REAL DEFAULT 0,
+      experience_match_pct REAL DEFAULT 0,
+      education_match_pct REAL DEFAULT 0,
+      overall_match_pct REAL DEFAULT 0,
+      rank_position INTEGER DEFAULT 0,
+      ai_analyzed_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
@@ -183,6 +191,33 @@ const initDatabase = async () => {
   } catch (e) {
     // Indexes might already exist
   }
+
+  // ── Lightweight migrations for DBs created before new columns existed ──
+  const ensureColumn = (table, column, ddl) => {
+    try {
+      const stmt = db.prepare('SELECT name FROM pragma_table_info(?)');
+      stmt.bind([table]);
+      const cols = [];
+      while (stmt.step()) cols.push(stmt.getAsObject().name);
+      stmt.free();
+      if (!cols.includes(column)) {
+        db.run(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+      }
+    } catch (e) { /* ignore */ }
+  };
+  try {
+    ensureColumn('jobs', 'min_experience_years', 'min_experience_years REAL DEFAULT 0');
+    ensureColumn('jobs', 'min_education', "min_education TEXT DEFAULT 'any'");
+    ensureColumn('applications', 'skill_match_pct', 'skill_match_pct REAL DEFAULT 0');
+    ensureColumn('applications', 'experience_match_pct', 'experience_match_pct REAL DEFAULT 0');
+    ensureColumn('applications', 'education_match_pct', 'education_match_pct REAL DEFAULT 0');
+    ensureColumn('applications', 'overall_match_pct', 'overall_match_pct REAL DEFAULT 0');
+    ensureColumn('applications', 'rank_position', 'rank_position INTEGER DEFAULT 0');
+    ensureColumn('applications', 'ai_analyzed_at', 'ai_analyzed_at DATETIME');
+    ensureColumn('candidate_profiles', 'headline', 'headline TEXT');
+    ensureColumn('candidate_profiles', 'bio', 'bio TEXT');
+    ensureColumn('employer_profiles', 'phone', 'phone TEXT');
+  } catch (e) { /* ignore migration errors */ }
 
   saveDatabase();
   console.log('Database initialized successfully');

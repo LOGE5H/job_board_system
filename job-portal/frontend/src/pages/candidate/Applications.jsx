@@ -15,7 +15,8 @@ import {
   Star,
   Eye,
   ExternalLink,
-  Building2
+  Building2,
+  Brain
 } from 'lucide-react';
 
 const statusConfig = {
@@ -170,7 +171,7 @@ export default function Applications() {
                     <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       {app.companyLogo ? (
                         <img
-                          src={`http://localhost:5000${app.companyLogo}`}
+                          src={`${app.companyLogo}`}
                           alt={app.companyName}
                           className="w-12 h-12 rounded-lg object-cover"
                         />
@@ -210,7 +211,19 @@ export default function Applications() {
                   </div>
 
                   {/* Status & Actions */}
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    {/* AI Match Score Badge */}
+                    {app.overallMatchPct > 0 && (
+                      <div className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold border ${
+                        app.overallMatchPct >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        app.overallMatchPct >= 60 ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        app.overallMatchPct >= 40 ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                     'bg-red-50 text-red-600 border-red-200'
+                      }`}>
+                        <Brain className="h-3.5 w-3.5" />
+                        {app.overallMatchPct}% Match
+                      </div>
+                    )}
                     <span className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium border ${config.color}`}>
                       <StatusIcon className="h-4 w-4 mr-2" />
                       {config.label}
@@ -243,7 +256,7 @@ export default function Applications() {
                   <div className="mt-4 p-3 bg-green-50 rounded-lg">
                     <p className="text-sm text-green-800 flex items-center">
                       <Star className="h-4 w-4 mr-2" />
-                      Great news! You've been shortlisted. The employer may contact you soon.
+                      Great news! You've been shortlisted. The institution may contact you soon.
                     </p>
                   </div>
                 )}

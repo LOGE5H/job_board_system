@@ -127,7 +127,7 @@ export default function SavedJobs() {
                   <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     {job.logoPath ? (
                       <img
-                        src={`http://localhost:5000${job.logoPath}`}
+                        src={`${job.logoPath}`}
                         alt={job.companyName}
                         className="w-12 h-12 rounded-lg object-cover"
                       />

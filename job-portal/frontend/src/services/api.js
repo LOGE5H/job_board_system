@@ -67,7 +67,9 @@ export const employerAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   getCompanyPage: (id) => api.get(`/employer/company/${id}`),
-  getRecommendedCandidates: (jobId) => api.get(`/employer/jobs/${jobId}/recommended-candidates`)
+  getRecommendedCandidates: (jobId) => api.get(`/employer/jobs/${jobId}/recommended-candidates`),
+  runAIRanking: (jobId) => api.post(`/employer/jobs/${jobId}/rank`),
+  getAIRanking: (jobId) => api.get(`/employer/jobs/${jobId}/ai-ranking`)
 };
 
 // Candidate API
@@ -105,6 +107,29 @@ export const notificationsAPI = {
 // Analytics API
 export const analyticsAPI = {
   getPublic: () => api.get('/analytics/public')
+};
+
+// AI API — real Gemini when GEMINI_API_KEY is set, demo mode fallback otherwise.
+export const aiAPI = {
+  getStatus: () => api.get('/ai/status'),
+  analyzeResume: (data) => api.post('/ai/analyze-resume', data),
+  generateJobDescription: (data) => api.post('/ai/generate-job-description', data),
+  coverLetterHelp: (data) => api.post('/ai/cover-letter-help', data),
+  resumeTips: (data) => api.post('/ai/resume-tips', data || {}),
+  matchExplanation: (data) => api.post('/ai/match-explanation', data),
+  copilot: (data) => api.post('/ai/copilot', data),
+  careerPlan: (data) => api.post('/ai/career-plan', data),
+  interviewKit: (data) => api.post('/ai/interview-kit', data),
+  jobQuality: (data) => api.post('/ai/job-quality', data),
+  candidateFit: (data) => api.post('/ai/candidate-fit', data),
+  // New Gen AI endpoints
+  chat: (data) => api.post('/ai/chat', data),
+  interviewQuestions: (data) => api.post('/ai/interview-questions', data),
+  learningPath: (data) => api.post('/ai/learning-path', data),
+  rewriteExperience: (data) => api.post('/ai/rewrite-experience', data),
+  employerMessage: (data) => api.post('/ai/employer-message', data),
+  salaryEstimate: (data) => api.post('/ai/salary-estimate', data),
+  fakeJobCheck: (data) => api.post('/ai/fake-job-check', data)
 };
 
 export default api;

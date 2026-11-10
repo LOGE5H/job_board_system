@@ -25,12 +25,14 @@ import CreateJob from './pages/employer/CreateJob';
 import EditJob from './pages/employer/EditJob';
 import Applicants from './pages/employer/Applicants';
 import EmployerProfile from './pages/employer/Profile';
+import AIRanking from './pages/employer/AIRanking';
 
 // Candidate Pages
 import CandidateDashboard from './pages/candidate/Dashboard';
 import CandidateApplications from './pages/candidate/Applications';
 import SavedJobs from './pages/candidate/SavedJobs';
 import CandidateProfile from './pages/candidate/Profile';
+import AIStudio from './pages/AIStudio';
 
 // Protected Route Components
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -89,6 +91,8 @@ function AppRoutes() {
       <Route path="/register/candidate" element={<PublicOnlyRoute><RegisterCandidate /></PublicOnlyRoute>} />
       <Route path="/register/employer" element={<PublicOnlyRoute><RegisterEmployer /></PublicOnlyRoute>} />
       <Route path="/verify/:token" element={<VerifyEmail />} />
+
+      <Route path="/ai-studio" element={<ProtectedRoute allowedRoles={['candidate', 'employer']}><AIStudio /></ProtectedRoute>} />
       
       {/* Employer Routes */}
       <Route path="/employer/dashboard" element={
@@ -108,6 +112,9 @@ function AppRoutes() {
       } />
       <Route path="/employer/jobs/:jobId/applications" element={
         <ProtectedRoute allowedRoles={['employer']}><Applicants /></ProtectedRoute>
+      } />
+      <Route path="/employer/jobs/:jobId/ai-ranking" element={
+        <ProtectedRoute allowedRoles={['employer']}><AIRanking /></ProtectedRoute>
       } />
       <Route path="/employer/profile" element={
         <ProtectedRoute allowedRoles={['employer']}><EmployerProfile /></ProtectedRoute>

@@ -45,15 +45,20 @@ export default function CompanyPage() {
     );
   }
 
+  const companyName = company.companyName || company.company_name;
+  const logoPath = company.logoPath || company.logo_path;
+  const companyDescription = company.companyDescription || company.company_description;
+  const memberSince = company.memberSince || company.member_since;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Company Header */}
       <div className="card mb-8">
         <div className="flex flex-col md:flex-row items-start gap-6">
-          {company.logo_path ? (
+          {logoPath ? (
             <img 
-              src={company.logo_path}
-              alt={company.company_name}
+              src={logoPath}
+              alt={companyName}
               className="w-24 h-24 rounded-xl object-cover"
             />
           ) : (
@@ -63,7 +68,7 @@ export default function CompanyPage() {
           )}
 
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">{company.company_name}</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{companyName}</h1>
             
             <div className="flex flex-wrap items-center gap-4 mt-3 text-gray-600">
               {company.industry && (
@@ -92,12 +97,12 @@ export default function CompanyPage() {
               )}
               <span className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
-                Member since {new Date(company.member_since).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                Member since {memberSince ? new Date(memberSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—'}
               </span>
             </div>
 
-            {company.company_description && (
-              <p className="mt-4 text-gray-600">{company.company_description}</p>
+            {companyDescription && (
+              <p className="mt-4 text-gray-600">{companyDescription}</p>
             )}
           </div>
         </div>
@@ -113,8 +118,8 @@ export default function CompanyPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {jobs.map(job => (
               <Link 
-                key={job.id}
-                to={`/jobs/${job.id}`}
+                key={job.id || job._id}
+                to={`/jobs/${job.id || job._id}`}
                 className="card hover:shadow-md transition-shadow"
               >
                 <h3 className="text-lg font-semibold text-gray-900 hover:text-primary-600">
@@ -127,7 +132,7 @@ export default function CompanyPage() {
                     {job.location}
                   </span>
                   <span className="badge-primary">
-                    {job.job_type}
+                    {job.jobType || job.job_type}
                   </span>
                   {job.category && (
                     <span className="badge-gray">
@@ -136,14 +141,14 @@ export default function CompanyPage() {
                   )}
                 </div>
 
-                {(job.salary_min || job.salary_max) && (
+                {((job.salaryMin ?? job.salary_min) || (job.salaryMax ?? job.salary_max)) && (
                   <p className="mt-2 text-gray-600">
-                    ${job.salary_min?.toLocaleString() || '0'} - ${job.salary_max?.toLocaleString() || '∞'}
+                    ${(job.salaryMin ?? job.salary_min)?.toLocaleString() || '0'} - ${(job.salaryMax ?? job.salary_max)?.toLocaleString() || '∞'}
                   </p>
                 )}
 
                 <p className="mt-3 text-sm text-gray-500">
-                  Posted {new Date(job.created_at).toLocaleDateString()}
+                  Posted {job.createdAt || job.created_at ? new Date(job.createdAt || job.created_at).toLocaleDateString() : 'recently'}
                 </p>
               </Link>
             ))}

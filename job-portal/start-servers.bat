@@ -7,14 +7,14 @@ echo Checking MongoDB connection...
 
 :: Start Backend Server
 echo Starting Backend Server on port 5000...
-start "Backend Server" cmd /k "cd /d d:\NOOO\job-portal\backend && npm run dev"
+start "Backend Server" cmd /k "cd /d ""%~dp0backend"" && npm run dev"
 
 :: Wait a moment for backend to start
 timeout /t 3 /nobreak > nul
 
 :: Start Frontend Server
 echo Starting Frontend Server on port 3000...
-start "Frontend Server" cmd /k "cd /d d:\NOOO\job-portal\frontend && npm run dev"
+start "Frontend Server" cmd /k "cd /d ""%~dp0frontend"" && npm run dev"
 
 echo.
 echo ========================================

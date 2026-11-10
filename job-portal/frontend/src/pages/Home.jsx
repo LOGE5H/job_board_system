@@ -93,7 +93,7 @@ export default function Home() {
             </h1>
             
             <p className="text-xl md:text-2xl text-white/80 mb-10 animate-slide-up" style={{animationDelay: '0.1s'}}>
-              Connect with top employers and discover opportunities that match your skills and aspirations.
+              Connect with top institutions / companies and discover opportunities that match your skills and aspirations.
             </p>
 
             {/* Search Form */}
@@ -287,7 +287,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* For Candidates */}
+            {/* For Job Seekers */}
             <div className="card relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary-500/10 to-purple-500/10 rounded-full -mr-20 -mt-20 group-hover:scale-150 transition-transform duration-500"></div>
               
@@ -297,7 +297,7 @@ export default function Home() {
                     <Users className="h-8 w-8 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">For Candidates</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">For Job Seekers</h3>
                     <p className="text-gray-500">Find your perfect role</p>
                   </div>
                 </div>
@@ -325,7 +325,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* For Employers */}
+            {/* For Institutions / Companies */}
             <div className="card relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-full -mr-20 -mt-20 group-hover:scale-150 transition-transform duration-500"></div>
               
@@ -335,7 +335,7 @@ export default function Home() {
                     <Building2 className="h-8 w-8 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">For Employers</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">For Institutions / Companies</h3>
                     <p className="text-gray-500">Hire top talent</p>
                   </div>
                 </div>
@@ -370,7 +370,7 @@ export default function Home() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-            {['Trusted by 10,000+ companies', '100% Free for candidates', '24/7 Support', 'Verified employers'].map((text, i) => (
+            {['Trusted by 10,000+ companies', '100% Free for candidates', '24/7 Support', 'Verified institutions'].map((text, i) => (
               <div key={i} className="flex items-center gap-2 text-gray-600">
                 <CheckCircle className="h-5 w-5 text-emerald-500" />
                 <span className="font-medium">{text}</span>
